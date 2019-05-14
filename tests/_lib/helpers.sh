@@ -12,10 +12,14 @@ CHECK_COUNTER=1
 
 check() {
   local command=${1:?required}
+  local silent=${2}
   local status
 
-  travis_section start "test.$CHECK_COUNTER"
-  printf "\$ \e[33m%s\e[0m\n" "$command"
+  if [[ -z "$silent" ]]; then
+    travis_section start "test.$CHECK_COUNTER"
+    printf "\$ \e[33m%s\e[0m\n" "$command"
+  fi
+  local saved_opts="set -$-"
   set +e
   # partially evaluate our command arguments
   eval set -- ${command}
@@ -26,19 +30,69 @@ check() {
     "$@"
     status2=$?
   fi
-  set -e
-  travis_section end "test.$CHECK_COUNTER"
-  ((++CHECK_COUNTER))
+  eval "${saved_opts}"
+  if [[ -z "$silent" ]]; then
+    travis_section end "test.$CHECK_COUNTER"
+    ((++CHECK_COUNTER))
+  fi
 
   # print evaluated args on failure
   if [[ "$status1" -ne 0 ]]; then
-    printf "!! \e[31m%s\e[0m\n" "$evaluated_arguments"
+    if [[ -z "$silent" ]]; then
+      printf "!! \e[31m%s\e[0m\n" "$evaluated_arguments"
+    fi
     return ${status1}
   fi
   if [[ "$status2" -ne 0 ]]; then
-    printf "! \e[31m%s\e[0m\n" "$evaluated_arguments"
+    if [[ -z "$silent" ]]; then
+      printf "! \e[31m%s\e[0m\n" "$evaluated_arguments"
+    fi
     return ${status2}
   fi
+}
+
+check_retry() {
+  local command=${1:?required}
+  local max=${2:-60}
+  local interval=${3:-1}
+
+  travis_section start "test.$CHECK_COUNTER"
+  printf "\$ \e[33m%s\e[0m\n" "$command"
+
+  local counter=1
+  local status
+  local saved_opts
+  while true; do
+    saved_opts="set -$-"
+    set +e
+    check "$command" 1 # > /dev/null 2>&1;
+    status=$?
+    eval "${saved_opts}"
+    if [[ "$status" -eq 0 ]]; then
+      if [[ "$counter" -ne 1 ]]; then
+        echo
+      fi
+
+      travis_section end "test.$CHECK_COUNTER"
+      ((++CHECK_COUNTER))
+
+      return 0
+    fi
+    if [[ "$counter" -eq 1 ]]; then
+      echo -n "Waiting for satisfaction of condition '$command'. Zzz.."
+    fi
+    sleep ${interval}
+    echo -n "."
+    ((++counter))
+    if [[ ${counter} -gt ${max} ]]; then
+      echo
+      echo_err "FATAL: check_retry didn't satisfy '$command' (tried $max times with interval of $interval sec)"
+      travis_section end "test.$CHECK_COUNTER"
+      ((++CHECK_COUNTER))
+      exit 1
+    fi
+  done
+
 }
 
 announce1() {
@@ -68,6 +122,7 @@ enter_simnet() {
 wait_for_bitcoin_ready() {
   local num_blocks=432
   announce1 "waiting for master bitcoin node to mine $num_blocks blocks "
+  local saved_opts="set -$-"
   set +e
   local probe_counter=1
   local delay=1
@@ -80,9 +135,10 @@ wait_for_bitcoin_ready() {
     if [[ ${probe_counter} -gt ${max_probes} ]]; then
       echo
       echo_err "master bitcoin node didn't reach expected $num_blocks blocks in time"
+      eval "${saved_opts}"
       return 1
     fi
   done
-  set -e
+  eval "${saved_opts}"
   echo
 }
