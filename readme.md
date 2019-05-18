@@ -26,7 +26,7 @@ Tested on macOS and Ubuntu 18.10.
 ## Quick start
 
 In a terminal session:
-```
+```bash
 > git clone --recursive https://github.com/darwin/simverse.git
 > cd simverse
 > ./sv create                                 # first time, it will ask to clone repos, answer yes
@@ -41,7 +41,7 @@ _workspace/default > ./dc up                  # this gives you a nice log for wh
 
 In a second terminal session:
 
-```
+```bash
 > cd simverse
 > ./sv enter
 _workspace/default > btcd1 getinfo
@@ -57,9 +57,9 @@ _workspace/default > open_channel alice bob 0.1  # open a LN channel
 _workspace/default > pay alice bob 0.01          # pay via LN
 ```
 
-Here is the default recipe which was used for simnet generation (see `recipes/default.sh`):
+Here is the default recipe which was used for simnet generation (see [`recipes/default.sh`](recipes/default.sh)):
 
-```
+```bash
 . cookbook/cookbook.sh
 
 prelude
@@ -109,9 +109,9 @@ When you hit CTRL+C, docker will shutdown your simnet and you can rinse, repeat.
 3. you can control individual services via their names e.g. `alice getinfo` or 
    `btcd1 getnetworkinfo` (see `aliases` dir). Also note that first lnd node has alias `lncli` and first btcd node 
    has alias `btcctl`.
-4. you can also use convenience commands from `toolbox`, for example:
+4. you can also use convenience commands from [`toolbox`](toolbox), for example:
 
-```
+```bash
 # assuming you have at least one btcd node and lnd nodes alice, bob and charlie (see the recipe 'b1l3.sh')
 #
 # let's follow the tutorial https://dev.lightning.community/tutorial/01-lncli
@@ -171,7 +171,7 @@ config for following lnd nodes. Read the [`cookbook.sh`](recipes/cookbook/cookbo
 
 #### I'd like to know IP addresses of individual machines in the simnet cluster. How?
 
-> `list_docker_ips` please note that you should not use hard-coded IPs, instead use service names docker assigned to 
+> [`list_docker_ips`](toolbox/list_docker_ips) please note that you should not use hard-coded IPs, instead use service names docker assigned to 
 individual machines
 
 #### Is it possible to launch multiple simnets in parallel?
@@ -209,8 +209,8 @@ it this way I guess.
 > In a cluster of bitcoin nodes we need one which will be special. It will do some privileged tasks like mining or holding
 mined coins in its associated wallet. By convention, master bitcoin node is always first bitcoin node created. You can get its hostname
 by running `lookup_host 1 role bitcoin`. Simverse supports multiple bitcoin node implementations and master node might be either 
-btcd or bitcoind "flavor". Raw cli interface might be slightly different, so we try to hide this in our commands like `balance`, 
-`chain_height` or `earn`. If you looked at their implementation you would spot code branches for different bitcoin node flavors. 
+btcd or bitcoind "flavor". Raw cli interface might be slightly different, so we try to hide this in our commands like [`onchain_balance`](toolbox/onchain_balance), 
+[`chain_height`](toolbox/chain_height) or [`earn`](toolbox/earn). If you looked at their implementation you would spot code branches for different bitcoin node flavors. 
 
 #### Where is a faucet?
 
@@ -226,14 +226,28 @@ btcd or bitcoind "flavor". Raw cli interface might be slightly different, so we 
 
 #### What is the difference between heterogeneous and hybrid simnets?
 
-> A heterogeneous simnet is contains only `btcd` + `lnd` nodes or only `bitcoind` + `c-lightning` nodes. Does not mix them. 
+> A homogeneous simnet contains only `btcd` + `lnd` nodes or only `bitcoind` + `c-lightning` nodes. 
+Generally, it contains only one flavor of bitcoin and one flavor of lightning nodes. Heterogeneous simnet can mix them. 
 > A hybrid simnet is a simnet with cooperating nodes running in docker and also on the host machine. This is more advanced 
-developer setup where you want to develop/debug one specific node and have rest of the simnet running "in the background" in docker. 
+developer setup where you want to develop/debug one specific node and have rest of the simnet running "in the background" in docker.
 
-## sv utility reference
+#### Cool work! How can I send some sats your way?
 
+<p align="center">
+ <a target="_blank" rel="noopener noreferrer" href="https://tiphub.io/user/651358055/tip?site=github">
+   <img src="https://tiphub.io/static/images/tip-button-light.png" alt="Tip darwin on TipHub" height="60">
+   <br />
+   My pubkey starts with <code>03e24db0</code>
+ </a>
+</p>
 
-`> ./sv help`
+---
+
+## simverse utility reference
+
+Note that [`sv`](sv) is a convenience symlink to [`simverse`](simverse).
+
+##### `> ./sv help`
 ```
 Simverse v0.4.
 
@@ -260,7 +274,7 @@ Topics: simnet, recipes, workspace, toolbox, aliases.
 Please visit 'https://github.com/darwin/simverse' for further info.
 ```
 
-`> ./sv help simnet`
+##### `> ./sv help simnet`
 ```
 About simnets
 
@@ -335,7 +349,7 @@ prepared to be attached to go processes inside container and offer port mappings
 to be controlled from host machine. Please see `attach_dlv` command inside the toolbox.
 ```
 
-`> ./sv help workspace`
+##### `> ./sv help workspace`
 ```
 About workspace
 
@@ -349,7 +363,7 @@ Workspace contains a folder for each simnet named after it.
 You can enter your simnet via `./sv enter [name]`.
 ```
 
-`> ./sv help create`
+##### `> ./sv help create`
 ```
 Usage: ./sv create [-f] [recipe] [name]
 
@@ -365,7 +379,7 @@ parameters and drives the generator.
 Read more about recipes via `./sv help recipes`
 ```
 
-`> ./sv help recipe`
+##### `> ./sv help recipe`
 ```
 About recipes
 
@@ -399,7 +413,7 @@ We are not going to document the cookbook here. Please refer to its sources.
 Please look around in `recipes` folder and see how existing recipes are done.
 ```
 
-`> ./sv help toolbox`
+##### `> ./sv help toolbox`
 ```
 About toolbox
 
@@ -410,6 +424,7 @@ When you enter a simnet via `./sv enter [name]`, toolbox folder is added to your
 Explore `toolbox` folder for the details:
 
   attach_dlv
+  brief
   chain_height
   connect
   earn
@@ -432,7 +447,7 @@ Explore `toolbox` folder for the details:
 
 ```
 
-`> ./sv help aliases`
+##### `> ./sv help aliases`
 ```
 About aliases
 
@@ -444,8 +459,8 @@ For example default simnet will generate following aliases for you:
 
   alice
   bob
-  btcd
-  btcctl -> btcd
+  btcd1
+  btcctl -> btcd1
   lncli -> alice
 
 Aliases are convenience shortcuts to control tools for individual nodes (named by simnet recipe).
@@ -455,14 +470,14 @@ symlink pointing to the first lnd node. This comes handy for asking general ques
 not specific to exact node.
 ```
 
-`> ./sv help destroy`
+##### `> ./sv help destroy`
 ```
 Usage: ./sv destroy [name]
 
 Deletes a simnet with `name` (default).
 ```
 
-`> ./sv help enter`
+##### `> ./sv help enter`
 ```
 Usage: ./sv enter [name]
 
@@ -474,7 +489,7 @@ You typically use this command to start working with a given simnet. In the sub-
   * set PATH to additionally contain toolbox and aliases
 ```
 
-`> ./sv help list`
+##### `> ./sv help list`
 ```
 Usage: ./sv list [filter]
 
@@ -483,7 +498,7 @@ Lists all available simnets by name. Optionally you can filter the list using a 
 Run `./sv help simnet` to learn what is a simnet.
 ```
 
-`> ./sv help state`
+##### `> ./sv help state`
 ```
 Usage: ./sv state [sub-command] ...
 
@@ -506,7 +521,7 @@ Sub-commands:
 Run `./sv help simnet` to learn about simnet states.
 ```
 
-`> ./sv help repos`
+##### `> ./sv help repos`
 ```
 Usage: ./sv repos [sub-command] ...
 
