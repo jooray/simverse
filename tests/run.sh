@@ -56,9 +56,15 @@ else
   export SIMVERSE_GIT_REFERENCE_PREFIX=${SIMVERSE_GIT_REFERENCE_PREFIX:-$SIMVERSE_HOME/_repos} # use git references to limit network I/O
 fi
 
+cd "${SIMVERSE_HOME}"
+
+travis_section start "repos_init"
+  announce "init repos"
+  ./sv repos init
+travis_section end "repos_init"
+
 travis_section start "repos_report"
-  announce "repos report"
-  cd "${SIMVERSE_HOME}"
+  announce "report repos"
   ./sv repos report
 travis_section end "repos_report"
 
