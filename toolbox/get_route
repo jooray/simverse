@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-source _lib.sh
+set -e -o pipefail
+
+source _toolbox_lib.sh
 
 FROM_PERSON=${1:-alice}
 TO_PERSON=${2:-bob}

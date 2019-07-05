@@ -1,5 +1,6 @@
-# this is a container used as a starting point for all docker containers used at runtime
-FROM simverse/base:local
+
+# >>> runtime snippet >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+# this is a Dockerfile snippet used in docker containers for runtime
 
 ARG SIMVERSE_HOST_UID
 ARG SIMVERSE_HOST_GID
@@ -12,8 +13,9 @@ db-c++ \
 libressl \
 jq
 
-RUN go get -u github.com/go-delve/delve/cmd/dlv
-RUN dlv version
+# TODO: move this into a special snippet to provide go debugging support
+# RUN go get -u github.com/go-delve/delve/cmd/dlv
+# RUN dlv version
 
 # we want to prepare simnet user and run services under it
 # our main reason is to have docker _volumes written with host-friendly permissions
@@ -37,6 +39,9 @@ ENV PATH $PATH:/home/simnet
 
 # see https://github.com/krallin/tini
 RUN apk add --no-cache tini
+
 # we don't want to force entrypoint to not confuse ad-hoc commands via `docker exec`
 # see our `run` scripts in individual containers which might decide to use tiny as a wrapper
 # ENTRYPOINT ["/sbin/tini", "--"]
+
+# <<< runtime snippet <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

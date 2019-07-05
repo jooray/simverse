@@ -80,7 +80,6 @@ ECLAIR_BITCOIN_RPC_HOST=${ECLAIR_BITCOIN_RPC_HOST}
 ECLAIR_BACKEND=${ECLAIR_BACKEND}
 
 # error codes
-NO_ERR=0
 ERR_NOT_IMPLEMENTED=10
 ERR_MUST_CALL_PRELUDE_FIRST=11
 ERR_NEED_BTCD_OR_BITCOIND=12
@@ -110,6 +109,7 @@ init_common_defaults() {
   local
 }
 
+# shellcheck disable=SC2034
 init_btcd_defaults() {
   BTCD_REPO_PATH=${DEFAULT_BTCD_REPO_PATH}
   BTCWALLET_REPO_PATH=${DEFAULT_BTCWALLET_REPO_PATH}
@@ -117,21 +117,25 @@ init_btcd_defaults() {
   BTCWALLET_CONF_PATH=${DEFAULT_BTCWALLET_CONF_PATH}
 }
 
+# shellcheck disable=SC2034
 init_lnd_defaults() {
   LND_REPO_PATH=${DEFAULT_LND_REPO_PATH}
   LND_CONF_PATH=${DEFAULT_LND_CONF_PATH}
 }
 
+# shellcheck disable=SC2034
 init_bitcoind_defaults() {
   BITCOIND_REPO_PATH=${DEFAULT_BITCOIND_REPO_PATH}
   BITCOIND_CONF_PATH=${DEFAULT_BITCOIND_CONF_PATH}
 }
 
+# shellcheck disable=SC2034
 init_lightning_defaults() {
   LIGHTNING_REPO_PATH=${DEFAULT_LIGHTNING_REPO_PATH}
   LIGHTNING_CONF_PATH=${DEFAULT_LIGHTNING_CONF_PATH}
 }
 
+# shellcheck disable=SC2034
 init_eclair_defaults() {
   ECLAIR_REPO_PATH=${DEFAULT_ECLAIR_REPO_PATH}
   ECLAIR_CONF_PATH=${DEFAULT_ECLAIR_CONF_PATH}
@@ -294,7 +298,7 @@ advance_eclair_auto_name_counter() {
 eval_template() {
   local template_file=$1
   eval "cat <<TEMPLATE_EOF_MARKER
-$(<${template_file})
+$(<"${template_file}")
 TEMPLATE_EOF_MARKER
 " 2> /dev/null
 }
@@ -312,9 +316,27 @@ dedolarize() {
 eval_script_template() {
   local template_file=$1
   eval "cat <<TEMPLATE_EOF_MARKER
-$(dolarize<${template_file})
+$(dolarize<"${template_file}")
 TEMPLATE_EOF_MARKER
 " | dedolarize 2> /dev/null
+}
+
+into_dockerfile_snippet() {
+  # in dockerfile template scripts we use '#include ' convention for template parameters
+  sed 's/\$/>#</g' | sed 's/#include /$/g' | sed 's/`/>##</g' | sed 's/\\/>BACKSLASH</g'
+}
+
+from_dockerfile_snippet() {
+  # inverse of into_dockerfile_snippet
+  sed 's/>#</$/g' | sed 's/>##</`/g' | sed 's/>BACKSLASH</\\/g'
+}
+
+eval_dockerfile_template() {
+  local template_file=$1
+  eval "cat <<TEMPLATE_EOF_MARKER
+$(into_dockerfile_snippet<"${template_file}")
+TEMPLATE_EOF_MARKER
+" | from_dockerfile_snippet 2> /dev/null
 }
 
 create_aliases_dir() {
@@ -347,11 +369,31 @@ prepare_repos() {
   esac
 }
 
+interpolate_dockerfile() {
+  local path=$1
+  eval_dockerfile_template "$SCAFFOLD_DIR/docker/$path" > "docker/$path"
+}
+
+# shellcheck disable=SC2034
+generate_dockerfiles() {
+  BASE_DOCKERFILE_SNIPPET=$(eval_dockerfile_template "$TEMPLATES_DIR/docker/base/Dockerfile")
+  BUILDTIME_DOCKERFILE_SNIPPET=$(eval_dockerfile_template "$TEMPLATES_DIR/docker/buildtime/Dockerfile")
+  RUNTIME_DOCKERFILE_SNIPPET=$(eval_dockerfile_template "$TEMPLATES_DIR/docker/runtime/Dockerfile")
+
+  interpolate_dockerfile "bitcoind/Dockerfile"
+  interpolate_dockerfile "btcd/Dockerfile"
+  interpolate_dockerfile "eclair/Dockerfile"
+  interpolate_dockerfile "lightning/Dockerfile"
+  interpolate_dockerfile "lnd/Dockerfile"
+  interpolate_dockerfile "pre/Dockerfile"
+}
+
 scaffold_simnet() {
   # copy including dot files
   shopt -s dotglob
-  cp -a "$SCAFFOLD_DIR"/* .
+  cp -aL "$SCAFFOLD_DIR"/* .
   shopt -u dotglob
+  generate_dockerfiles
 }
 
 add_toolbox() {
@@ -390,28 +432,28 @@ prepare_pre_volumes() {
 
 prepare_btcd_volumes() {
   local name=${1:?required}
-  mkdir _volumes/btcd-data-${name}
-  mkdir _volumes/btcwallet-data-${name}
+  mkdir "_volumes/btcd-data-${name}"
+  mkdir "_volumes/btcwallet-data-${name}"
 }
 
 prepare_lnd_volumes() {
   local name=${1:?required}
-  mkdir _volumes/lnd-data-${name}
+  mkdir "_volumes/lnd-data-${name}"
 }
 
 prepare_bitcoind_volumes() {
   local name=${1:?required}
-  mkdir _volumes/bitcoind-data-${name}
+  mkdir "_volumes/bitcoind-data-${name}"
 }
 
 prepare_lightning_volumes() {
   local name=${1:?required}
-  mkdir _volumes/lightning-data-${name}
+  mkdir "_volumes/lightning-data-${name}"
 }
 
 prepare_eclair_volumes() {
   local name=${1:?required}
-  mkdir _volumes/eclair-data-${name}
+  mkdir "_volumes/eclair-data-${name}"
 }
 
 ensure_bitcoin_service() {
@@ -454,7 +496,7 @@ add_lnd() {
     LND_BACKEND="$(get_last_bitcoin_backend)"
   fi
 
-  echo_service_separator lnd ${NAME} ${LND_COUNTER}
+  echo_service_separator lnd "${NAME}" ${LND_COUNTER}
   eval_template "$TEMPLATES_DIR/lnd.yml" >> ${COMPOSE_FILE}
 
   local alias_file="$ALIASES_DIR_NAME/$NAME"
@@ -485,7 +527,7 @@ add_btcd() {
     NAME=$(gen_btcd_auto_name)
   fi
 
-  echo_service_separator btcd ${NAME} ${BTCD_COUNTER}
+  echo_service_separator btcd "${NAME}" ${BTCD_COUNTER}
   eval_template "$TEMPLATES_DIR/btcd.yml" >> ${COMPOSE_FILE}
 
   local alias_file="$ALIASES_DIR_NAME/$NAME"
@@ -516,7 +558,7 @@ add_bitcoind() {
     NAME=$(gen_bitcoind_auto_name)
   fi
 
-  echo_service_separator bitcoind ${NAME} ${BITCOIND_COUNTER}
+  echo_service_separator bitcoind "${NAME}" ${BITCOIND_COUNTER}
   eval_template "$TEMPLATES_DIR/bitcoind.yml" >> ${COMPOSE_FILE}
 
   local alias_file="$ALIASES_DIR_NAME/$NAME"
@@ -561,7 +603,7 @@ add_lightning() {
     fi
   fi
 
-  echo_service_separator lightning ${NAME} ${LIGHTNING_COUNTER}
+  echo_service_separator lightning "${NAME}" ${LIGHTNING_COUNTER}
   eval_template "$TEMPLATES_DIR/lightning.yml" >> ${COMPOSE_FILE}
 
   local alias_file="$ALIASES_DIR_NAME/$NAME"
@@ -606,7 +648,7 @@ add_eclair() {
     fi
   fi
 
-  echo_service_separator eclair ${NAME} ${ECLAIR_COUNTER}
+  echo_service_separator eclair "${NAME}" ${ECLAIR_COUNTER}
   eval_template "$TEMPLATES_DIR/eclair.yml" >> ${COMPOSE_FILE}
 
   local alias_file="$ALIASES_DIR_NAME/$NAME"

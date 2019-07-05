@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-source _lib.sh
+set -e -o pipefail
+
+source _toolbox_lib.sh
 
 if is_btcd_master; then
   btcctl --wallet getbalance imported | trim

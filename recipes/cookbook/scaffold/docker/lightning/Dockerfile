@@ -1,8 +1,13 @@
 # see https://medium.com/@tonistiigi/advanced-multi-stage-build-patterns-6f741b852fae
+ARG LIGHTNING_DOCKER_BUILDTIME_IMAGE
+ARG LIGHTNING_DOCKER_RUNTIME_IMAGE
 ARG RELEVANT_BITCOIND_IMAGE
 
 # modelled after https://github.com/ElementsProject/lightning/blob/master/Dockerfile
-FROM simverse/buildtime:local as simverse_buildtime_lightning
+FROM ${LIGHTNING_DOCKER_BUILDTIME_IMAGE} as simverse_buildtime_lightning
+
+#include BASE_DOCKERFILE_SNIPPET
+#include BUILDTIME_DOCKERFILE_SNIPPET
 
 RUN apk add --no-cache --update \
 ca-certificates \
@@ -56,7 +61,10 @@ FROM ${RELEVANT_BITCOIND_IMAGE} as simverse_runtime_bitcoind
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
-FROM simverse/runtime:local as simverse_runtime_lightning
+FROM ${LIGHTNING_DOCKER_RUNTIME_IMAGE} as simverse_runtime_lightning
+
+#include BASE_DOCKERFILE_SNIPPET
+#include RUNTIME_DOCKERFILE_SNIPPET
 
 RUN apk add --no-cache --update \
 gmp-dev \
@@ -100,11 +108,6 @@ WORKDIR /home/simnet
 ENV LIGHTNINGD_DATA=/home/simnet/.lightning
 
 COPY "docker/lightning/home" "/home/simnet/"
-
-# replace symlink with actual target lib files
-RUN rm lib
-COPY "docker/_aux/runtime/lib" "/home/simnet/lib"
-
 COPY "$LIGHTNING_CONF_PATH" "/home/simnet/seed-config"
 
 RUN mkdir .lightning
