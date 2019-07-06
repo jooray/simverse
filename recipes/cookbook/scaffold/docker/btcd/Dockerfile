@@ -28,7 +28,10 @@ RUN GO111MODULE=on go install -v . ./cmd/...
 
 # ---------------------------------------------------------------------------------------------------------------------------
 
-FROM simverse/buildtime:local as simverse_buildtime_btcd
+FROM ${BTCD_DOCKER_BUILDTIME_IMAGE} as simverse_buildtime_btcd
+
+#include BASE_DOCKERFILE_SNIPPET
+#include BUILDTIME_DOCKERFILE_SNIPPET
 
 ARG BTCD_REPO_PATH
 
@@ -73,9 +76,9 @@ USER simnet
 
 WORKDIR /home/simnet
 
-COPY "docker/btcd/home" "/home/simnet/"
-COPY "$BTCD_CONF_PATH" "/home/simnet/seed-btcd.conf"
-COPY "$BTCWALLET_CONF_PATH" "/home/simnet/seed-btcwallet.conf"
+COPY --chown=simnet "docker/btcd/home" "."
+COPY --chown=simnet "$BTCD_CONF_PATH" "seed-btcd.conf"
+COPY --chown=simnet "$BTCWALLET_CONF_PATH" "seed-btcwallet.conf"
 
 RUN mkdir .btcd
 RUN mkdir .btcwallet

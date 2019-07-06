@@ -32,6 +32,9 @@ services:
       context: .
       dockerfile: docker/pre/Dockerfile
       args:
+        - GCFLAGS=$GCFLAGS
+        - SIMVERSE_HOST_UID=$SIMVERSE_HOST_UID
+        - SIMVERSE_HOST_GID=$SIMVERSE_HOST_GID
         - PRE_DOCKER_BUILDTIME_IMAGE=$PRE_DOCKER_BUILDTIME_IMAGE
         - PRE_DOCKER_RUNTIME_IMAGE=$PRE_DOCKER_RUNTIME_IMAGE
     ports:
@@ -41,6 +44,7 @@ services:
       - ./_volumes/certs:/home/simnet/certs # shared certificates
     environment:
       - CONTAINER_NAME=pre
+      - REPORT_ENV=${SIMVERSE_REPORT_ENV}
       - SERVICE_READY_PORT=${SERVICE_READY_PORT}
       - CONTAINER_SERVICE_PORT=${CONTAINER_SERVICE_PORT}
       - SIMNET_NAME=${SIMNET_NAME}

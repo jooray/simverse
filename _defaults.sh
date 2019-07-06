@@ -10,6 +10,7 @@ export SIMVERSE_SHELL=${SIMVERSE_SHELL:-$SHELL}
 export SIMVERSE_VERBOSE=${SIMVERSE_VERBOSE}
 export SIMVERSE_VERBOSE_ALIASES=${SIMVERSE_VERBOSE_ALIASES}
 export SIMVERSE_DONT_BEAUTIFY_ALIASES=${SIMVERSE_DONT_BEAUTIFY_ALIASES}
+export SIMVERSE_DONT_CHECK_PREREQS=${SIMVERSE_DONT_CHECK_PREREQS}
 
 #############################################################################################################################
 # simnet create-time defaults, effective during ./sv create (or other ./sv commands)
@@ -102,6 +103,8 @@ export DEFAULT_ECLAIR_CONF_PATH=${DEFAULT_ECLAIR_CONF_PATH:-docker/eclair/eclair
 
 export SIMVERSE_HOST_BIND=${SIMVERSE_HOST_BIND:-127.0.0.1:} # note the trailing colon, see https://docs.docker.com/compose/compose-file/#ports
 export SIMVERSE_EXTRA_SERVICE_CONFIG=${SIMVERSE_EXTRA_SERVICE_CONFIG}
+
+export SIMVERSE_REPORT_ENV=${SIMVERSE_REPORT_ENV}
 
 export DEBUG=${DEBUG:-info}
 export FAUCET_ADDR=${FAUCET_ADDR:-mp76nrashrCCYLy3a8cAc5HufEas11yHbh} # note this is a regtest address

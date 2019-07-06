@@ -1,4 +1,3 @@
-
 # >>> runtime snippet >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 # this is a Dockerfile snippet used in docker containers for runtime
 
@@ -11,7 +10,9 @@ libevent \
 db \
 db-c++ \
 libressl \
-jq
+jq \
+tini \
+tree
 
 # TODO: move this into a special snippet to provide go debugging support
 # RUN go get -u github.com/go-delve/delve/cmd/dlv
@@ -37,11 +38,9 @@ WORKDIR /home/simnet
 
 ENV PATH $PATH:/home/simnet
 
-# see https://github.com/krallin/tini
-RUN apk add --no-cache tini
-
 # we don't want to force entrypoint to not confuse ad-hoc commands via `docker exec`
 # see our `run` scripts in individual containers which might decide to use tiny as a wrapper
 # ENTRYPOINT ["/sbin/tini", "--"]
+# see https://github.com/krallin/tini
 
 # <<< runtime snippet <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
