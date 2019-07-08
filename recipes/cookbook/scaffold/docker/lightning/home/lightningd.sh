@@ -2,7 +2,7 @@
 
 source lib/init.sh
 
-cp "seed-config" ".lightning/config"
+cp "seed-config" "$LIGHTNINGD_DATA/config"
 
 # optional parameters
 RPC_USER=${RPC_USER}
@@ -55,4 +55,4 @@ fi
 PARAMS+=" --disable-dns"
 
 set -x
-exec lightningd ${PARAMS} ${LIGHTNINGD_EXTRA_PARAMS} "$@"
+exec lightning-docker-entrypoint.sh ${PARAMS} ${LIGHTNINGD_EXTRA_PARAMS} "$@"
